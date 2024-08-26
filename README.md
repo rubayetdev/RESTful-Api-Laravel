@@ -2,7 +2,7 @@
 This is just a testing project for RESTFul API.
 
 # Installation
-- [Install]{#install}
+- [Install](#install)
 
 ## Install
 Clone this repository

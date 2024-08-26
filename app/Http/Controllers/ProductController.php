@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Products;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -11,7 +12,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        return Products::all();
     }
 
     /**
@@ -19,15 +20,24 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required | string | max:180',
+            'price' => 'required | numeric',
+            'description' => 'required | string',
+        ]);
+
+        $product = Products::create($request->all());
+
+        return response()->json($product, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id, Request $request)
     {
-        //
+        $product = Products::findOrFail($id);
+        return response()->json($product, 200);
     }
 
     /**
@@ -35,7 +45,15 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required | string | max:180',
+            'price' => 'required | numeric',
+            'description' => 'required | string',
+        ]);
+
+        $product = Products::findOrFail($id);
+        $product->update($request->all());
+        return response()->json($product, 200);
     }
 
     /**
@@ -43,6 +61,8 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $product = Products::findOrFail($id);
+        $product->delete();
+        return response()->json(null, 204);
     }
 }

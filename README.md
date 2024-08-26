@@ -5,7 +5,13 @@ This is just a testing project for RESTFul API.
 - [Install](#install)
 
 ## Install
-Clone this repository
+### Clone Repository
+
 ```bash
 git clone git@github.com:rubayetdev/RESTful-Api-Laravel.git
+```
+### Install Dependencies
+
+```bash
+composer install
 ```

@@ -12,5 +12,8 @@ Route::get('/user', function (Request $request) {
 Route::post('/register',[AuthController::class,'register']);
 Route::post('/login',[AuthController::class,'login']);
 Route::post('/logout',[AuthController::class,'logout'])->middleware('auth:sanctum');
+Route::post('password/email',[AuthController::class,'sendResetLinkEmail']);
+Route::post('password/reset',[AuthController::class,'resetPassword']);
+Route::post('clear-throttle', [AuthController::class, 'clearThrottle']);
 
 Route::middleware('auth:sanctum')->apiResource('products',ProductController::class);

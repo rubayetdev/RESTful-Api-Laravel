@@ -123,4 +123,14 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+//    'providers' => [
+//        Laravel\Passport\PassportServiceProvider::class,
+//    ],
+//
+//    'aliases' => [
+//        // Other aliases...
+//
+//        'Files' => Illuminate\Support\Facades\File::class, // If such an alias is used
+//    ],
+
 ];

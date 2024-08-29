@@ -31,9 +31,6 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Check if the current user can view the profile
-
-
         return response()->json($user);
     }
 

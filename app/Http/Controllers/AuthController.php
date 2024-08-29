@@ -33,6 +33,8 @@ class AuthController extends Controller
 
         // Create a personal access token
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->access_token = $token;
+        $user->save();
 
         return response()->json([
             'access_token' => $token,
@@ -52,8 +54,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid login details'], 401);
         }
 
-        $user = Auth::user(); // Retrieve the currently authenticated user
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $user = User::where('email',$request->email)->first();
+        $token = $user->access_token;
 
         return response()->json([
             'access_token' => $token,
@@ -65,8 +67,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        $user->tokens()->delete(); // Revoke all tokens
+//        $user = $request->user();
+//        $user->tokens()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
     }

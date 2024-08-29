@@ -6,9 +6,9 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+//Route::get('/user', function (Request $request) {
+//    return $request->user();
+//})->middleware('auth:sanctum');
 
 Route::post('/register',[AuthController::class,'register']);
 Route::post('/login',[AuthController::class,'login']);
@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->apiResource('products',ProductController::cla
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/{id}', [UserController::class, 'show']);
-//       ->middleware('can:view,user'); // Apply the view policy here
+       //->middleware('can:view,user'); // Apply the view policy here
 
     Route::put('/user/{id}', [UserController::class, 'update']);
    //     ->middleware('can:update,user'); // Apply the update policy here

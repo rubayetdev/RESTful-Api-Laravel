@@ -14,11 +14,11 @@ class UserPolicy
         //
     }
 
-    public function view(User $user,User $model){
-        return $user->id === $model->id;
-    }
-
-    public function update(User $user,User $model){
-        return $user->id === $model->id;
-    }
+//    public function view(User $user,User $model){
+//        return $user->id === $model->id;
+//    }
+//
+//    public function update(User $user,User $model){
+//        return $user->id === $model->id;
+//    }
 }

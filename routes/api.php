@@ -16,7 +16,7 @@ Route::post('/logout',[AuthController::class,'logout'])->middleware('auth:sanctu
 Route::post('password/email',[AuthController::class,'sendResetLinkEmail']);
 Route::post('password/reset',[AuthController::class,'resetPassword']);
 Route::post('clear-throttle', [AuthController::class, 'clearThrottle']);
-
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::middleware('auth:sanctum')->apiResource('products',ProductController::class);
 
 Route::middleware('auth:sanctum')->group(function () {

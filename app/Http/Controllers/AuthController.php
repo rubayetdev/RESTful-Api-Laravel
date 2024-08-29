@@ -14,9 +14,57 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Mail\VerificationMail;
 
 class AuthController extends Controller
 {
+//    public function register(Request $request)
+//    {
+//        $request->validate([
+//            'name' => 'required|string|max:255',
+//            'email' => 'required|string|email|max:255|unique:users',
+//            'password' => 'required|string|min:8|confirmed',
+//        ]);
+//
+//        $user = User::create([
+//            'name' => $request->name,
+//            'email' => $request->email,
+//            'password' => Hash::make($request->password),
+//        ]);
+//
+//        // Create a personal access token
+//        $token = $user->createToken('auth_token')->plainTextToken;
+//        $user->access_token = $token;
+//        $user->save();
+//
+//        return response()->json([
+//            'access_token' => $token,
+//            'token_type' => 'Bearer',
+//        ]);
+//    }
+//
+//
+//    public function login(Request $request)
+//    {
+//        $request->validate([
+//            'email' => 'required|string|email',
+//            'password' => 'required|string',
+//        ]);
+//
+//        if (!Auth::attempt($request->only('email', 'password'))) {
+//            return response()->json(['message' => 'Invalid login details'], 401);
+//        }
+//
+//        $user = User::where('email',$request->email)->first();
+//        $token = $user->access_token;
+//
+//        return response()->json([
+//            'access_token' => $token,
+//            'token_type' => 'Bearer',
+//            'message' => 'Logged in successfully',
+//        ]);
+//    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -29,19 +77,66 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'email_verified_at' => null,
         ]);
 
-        // Create a personal access token
+
+        $otp = rand(100000, 999999);
+        $expiresAt = now()->addMinutes(10);
+
+
+        Cache::put('otp_' . $user->id, [
+            'otp' => $otp,
+            'expires_at' => $expiresAt,
+        ]);
         $token = $user->createToken('auth_token')->plainTextToken;
         $user->access_token = $token;
         $user->save();
 
+        Mail::to($user->email)->send(new VerificationMail($otp));
+
         return response()->json([
+            'message' => 'Registration successful. Please check your email for the OTP to verify your account.',
             'access_token' => $token,
-            'token_type' => 'Bearer',
         ]);
     }
 
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'otp' => 'required|digits:6',
+        ]);
+
+        $user = User::find($request->user_id);
+
+        // Debug: Check the OTP in cache
+        $cachedOtp = Cache::get('otp_' . $user->id);
+//        \Illuminate\Log\::info('Cached OTP: ', $cachedOtp);
+
+        if (!$cachedOtp) {
+            return response()->json(['message' => 'No OTP found for this user'], 404);
+        }
+        if ($cachedOtp['otp'] == $request->otp && now()->lessThan($cachedOtp['expires_at'])) {
+            $user->email_verified_at = now();
+            $user->save();
+
+
+            Cache::forget('otp_' . $user->id);
+
+            return response()->json(['message' => 'Email verified successfully']);
+        }
+
+        if ($cachedOtp['otp'] !== $request->otp) {
+            return response()->json(['message' => 'Invalid OTP'], 400);
+        }
+
+        if (now()->greaterThan($cachedOtp['expires_at'])) {
+            return response()->json(['message' => 'Expired OTP'], 400);
+        }
+
+
+    }
 
     public function login(Request $request)
     {
@@ -54,6 +149,12 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid login details'], 401);
         }
 
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user->email_verified_at) {
+            return response()->json(['message' => 'Email not verified'], 403);
+        }
+
         $user = User::where('email',$request->email)->first();
         $token = $user->access_token;
 
@@ -63,7 +164,6 @@ class AuthController extends Controller
             'message' => 'Logged in successfully',
         ]);
     }
-
 
     public function logout(Request $request)
     {
@@ -135,21 +235,21 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // Generate OTP and store it with an expiration time
-        $otp = rand(100000, 999999); // 6-digit OTP
-        $expiresAt = now()->addMinutes(5); // OTP expires in 5 minutes
 
-        // Store OTP and expiration time in cache
+        $otp = rand(100000, 999999);
+        $expiresAt = now()->addMinutes(5);
+
+
         Cache::put('otp_' . $user->id, [
             'otp' => $otp,
             'expires_at' => $expiresAt
         ]);
 
-        // Send OTP via email
-       Mail::to($user->email)->send(new \App\Mail\ResetNotification($otp));
+
+       Mail::to($user->email)->send(new \App\Mail\ResetNotification($otp,$user->name));
 
         return response()->json([
-            'message' => 'OTP sent to your email address.','otp'=>$otp
+            'message' => 'We sent a 6-digit code to your email address.'
         ], 200);
     }
 
@@ -171,17 +271,17 @@ class AuthController extends Controller
         $otpData = Cache::get('otp_' . $user->id);
 
         if ($otpData && isset($otpData['otp']) && $otpData['otp'] === (int)$request->otp) {
-            // OTP is valid, proceed with password reset
+
             $user->forceFill([
                 'password' => Hash::make($request->password),
             ])->save();
 
-            // Remove OTP from cache after use
+
             Cache::forget('otp_' . $user->id);
 
             return response()->json(['message' => 'Password has been reset.'], 200);
         } else {
-            // OTP is invalid or expired
+
             return response()->json(['message' => 'Invalid or expired OTP.'], 400);
         }
 

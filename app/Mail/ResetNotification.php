@@ -11,6 +11,7 @@ class ResetNotification extends Mailable
     use Queueable, SerializesModels;
 
     public $token;
+    public $username;
 
     /**
      * Create a new message instance.
@@ -18,9 +19,10 @@ class ResetNotification extends Mailable
      * @param  string  $token
      * @return void
      */
-    public function __construct($token)
+    public function __construct($token, $username)
     {
         $this->token = $token;
+        $this->username = $username;
     }
 
     /**
@@ -35,6 +37,7 @@ class ResetNotification extends Mailable
         ->subject('Reset Password Notification')
             ->with([
                 'token' => $this->token,
+                'username' => $this->username,
             ]);
     }
 }

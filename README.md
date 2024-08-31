@@ -1,7 +1,7 @@
 # RESTful-Api-Laravel
 This is just a testing project for RESTFul API.
 
-# Installation
+# Index
 - [Install](#install)
 
 ## Install
